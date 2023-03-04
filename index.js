@@ -6,11 +6,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 const port = process.env.PORT_NO;
 
-
-const db = require("./config/dbconfig");
-// const verifyUser = require("./middleware/verifyUser.js");
-
-// app.use(verifyUser.isStudent());
+const admin = require('./controllers/adminControllers');
 
 app.use('/admin', (req, res, next) => {
     if (!req.headers.authorization) {
@@ -21,8 +17,9 @@ app.use('/admin', (req, res, next) => {
         return res.status(401).json({ error: 'Cannot access this route!' })
     }
 });
-app.route('/admin/faculty').post(db.createFaculty);
-app.route('/admin/slot').post(db.createSlot);
+app.route('/admin/faculty/:id').get(admin.getFaculty);
+app.route('/admin/faculty').post(admin.createFaculty);
+app.route('/admin/slot').post(admin.createSlot);
 
 app.listen(port, () => {
     console.log(`Example app listening on http://localhost:${port}/`);
