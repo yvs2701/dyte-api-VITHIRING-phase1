@@ -103,6 +103,8 @@ Course.belongsToMany(Slot, { through: "Course_Slot" });
 Slot.belongsToMany(Course, { through: "Course_Slot" });
 Student.belongsToMany(Course, { through: "Student_Course" });
 Course.belongsToMany(Student, { through: "Student_Course" });
+Student.belongsToMany(Slot, { through: "Student_Slot" });
+Slot.belongsToMany(Student, { through: "Student_Slot" });
 
 (async () => {
     await sequelize.sync({ alter: true });

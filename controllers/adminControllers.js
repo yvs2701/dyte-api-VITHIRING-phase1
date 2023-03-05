@@ -1,4 +1,3 @@
-const sequelize = require('../config/configDB');
 const { Slot, Faculty, Course, Student, Timing } = require('../models/models');
 
 const createFaculty = async (req, res) => {
@@ -26,14 +25,6 @@ const createSlot = async (req, res) => {
         }, {
             include: [Timing]
         });
-        // const slots = [];
-
-        // for (let i = 0; i < timings.length; ++i) {
-        //     const slot = await Slot.create({ id: id, day: timings[i].day, startTime: timings[i].start, endTime: timings[i].end });
-        //     slots.push(slot.toJSON());
-        // }
-
-        // const data = await Slot.findAll({ where: {id: id}, attributes: ["id", "day", "startTime", "endTime"] });
 
         res.status(200).json({ success: true, data: slot });
     } catch (err) {
@@ -91,7 +82,7 @@ const createCourse = async (req, res) => {
 
 const createStudent = async (req, res) => {
     try {
-        const [student, created] = await Student.findOrCreate({ where: { id: "20BTECH101" }, defaults: { name: "John Doe" } });
+        const [student, created] = await Student.findOrCreate({ where: { id: "student" }, defaults: { name: "John Doe" } });
         res.status(created ? 201 : 200).json({ success: true, data: student });
     } catch (err) {
         console.error(err);
