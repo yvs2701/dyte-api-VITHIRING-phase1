@@ -75,35 +75,40 @@ const registerCourse = async (req, res) => {
     else if (course.hasFaculties(faculty_id) && course.hasSlots(slot_ids)) {
         const student_id = req.headers.authorization;
         const student = await Student.findByPk(student_id);
-        student.setCourses([course.id]);
-        student.setSlots(slot_ids);
 
-        const data = await Student.findByPk(student.id, {
-            include: [
-                {
-                    model: Course,
-                    through: { attributes: [] }, // exclude junction table
-                    include: [
-                        {
-                            model: Faculty,
-                            attributes: ["id", "name"],
-                            through: { attributes: [] }, // exclude junction table
-                        },
-                        {
-                            model: Slot,
-                            attributes: ["id"],
-                            include: {
-                                model: Timing,
-                                attributes: ["day", "start", "end"],
+        if (student.hasSlots(slot_ids))
+            res.status(400).json({ success: false, data: {}, error: "Slot already taken!" });
+        else {
+            student.setCourses([course.id]);
+            student.setSlots(slot_ids);
+
+            const data = await Student.findByPk(student.id, {
+                include: [
+                    {
+                        model: Course,
+                        through: { attributes: [] }, // exclude junction table
+                        include: [
+                            {
+                                model: Faculty,
+                                attributes: ["id", "name"],
+                                through: { attributes: [] }, // exclude junction table
                             },
-                            through: { attributes: [] }, // exclude junction table
-                        }
-                    ],
-                },
-            ]
-        });
+                            {
+                                model: Slot,
+                                attributes: ["id"],
+                                include: {
+                                    model: Timing,
+                                    attributes: ["day", "start", "end"],
+                                },
+                                through: { attributes: [] }, // exclude junction table
+                            }
+                        ],
+                    },
+                ]
+            });
 
-        res.status(200).json({ success: true, data: data });
+            res.status(200).json({ success: true, data: data });
+        }
     } else {
         res.status(400).json({ success: false, data: {}, error: "Bad Request!" });
     }
