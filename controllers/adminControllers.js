@@ -1,30 +1,102 @@
 const sequelize = require('../config/configDB');
-const { Slot, Faculty, Course, Student } = require('../models/models');
-
-
-const getFaculty = async (req, res) => {
-    const id = req.params.id;
-    const doc = await Faculty.findByPk(id);
-
-    if (doc === null)
-        res.status(404).json({ success: false, data: {} });
-    else
-        res.status(200).json({ success: true, data: doc });
-}
+const { Slot, Faculty, Course, Student, Timing } = require('../models/models');
 
 const createFaculty = async (req, res) => {
-    const id = req.body.id;
-    const name = req.body.name;
+    try {
+        const id = req.body.id;
+        const name = req.body.name;
 
-    const faculty = Faculty.build({ id: id, name: name });
-    await faculty.save();
+        const faculty = await Faculty.create({ id: id, name: name });
 
-    res.status(200).json({ success: true, data: faculty });
+        res.status(200).json({ success: true, data: faculty.toJSON() });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, data: {}, error: "Some error occured!" });
+    }
 }
 
-const createSlot = (req, res) => {
+const createSlot = async (req, res) => {
+    try {
+        const id = req.body.id;
+        const timings = req.body.timings;
 
+        const slot = await Slot.create({
+            id: id,
+            timings: timings
+        }, {
+            include: [Timing]
+        });
+        // const slots = [];
+
+        // for (let i = 0; i < timings.length; ++i) {
+        //     const slot = await Slot.create({ id: id, day: timings[i].day, startTime: timings[i].start, endTime: timings[i].end });
+        //     slots.push(slot.toJSON());
+        // }
+
+        // const data = await Slot.findAll({ where: {id: id}, attributes: ["id", "day", "startTime", "endTime"] });
+
+        res.status(200).json({ success: true, data: slot });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, data: {}, error: "Some error occured!" });
+    }
 }
 
+const createCourse = async (req, res) => {
+    try {
+        const id = req.body.id;
+        const name = req.body.name;
+        const course_type = req.body.course_type;
 
-module.exports = { getFaculty, createFaculty, createSlot };
+        const course = Course.build({ id: id, name: name, course_type: course_type });
+
+        const faculties = req.body.faculty_ids;
+        const slots = req.body.slot_ids;
+
+        await course.save();
+
+        await course.setFaculties(faculties);
+        await course.setSlots(slots);
+
+        let data = await Course.findByPk(course.id, {
+            include: [
+                {
+                    model: Faculty,
+                    attributes: ["id", "name"],
+                    through: { attributes: [] }, // exclude junction table
+                },
+                {
+                    model: Slot,
+                    attributes: ["id"],
+                    include: {
+                        model: Timing,
+                        attributes: ["day", "start", "end"],
+                    },
+                    through: { attributes: [] }, // exclude junction table
+                }
+            ],
+        });
+
+        // renaming slots to allowed_slots
+        data = data.dataValues;
+        data.allowed_slots = data.slots;
+        delete data.slots;
+
+        res.status(200).json({ success: true, data: data });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, data: {}, error: "Some error occured!" });
+    }
+}
+
+const createStudent = async (req, res) => {
+    try {
+        const [student, created] = await Student.findOrCreate({ where: { id: "20BTECH101" }, defaults: { name: "John Doe" } });
+        res.status(created ? 201 : 200).json({ success: true, data: student });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, data: {}, error: "Some error occured!" });
+    }
+}
+
+module.exports = { createFaculty, createSlot, createCourse, createStudent };
