@@ -31,7 +31,7 @@ app.use('/admin', (req, res, next) => {
     } else if (req.headers.authorization === 'admin') {
         next();
     } else {
-        return res.status(401).json({ error: 'Cannot access this route!' })
+        return res.status(401).json({ error: 'Cannot access this route!' });
     }
 });
 
